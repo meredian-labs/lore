@@ -24,11 +24,11 @@ builds:
       - -X github.com/nishchay/lore/internal/cli.BuildDate={{.Date}}
 
 archives:
-  - format: tar.gz
+  - formats: [tar.gz]
     name_template: "{{ .ProjectName }}_{{ .Os }}_{{ .Arch }}"
     format_overrides:
       - goos: windows
-        format: zip
+        formats: [zip]
 
 checksum:
   name_template: "checksums.txt"
@@ -41,17 +41,10 @@ changelog:
       - "^test:"
       - "Merge pull request"
 
-brews:
+homebrew_casks:
   - name: lore
     homepage: https://github.com/meredian-labs/lore
     description: "Local-first engineering memory system"
     repository:
       owner: meredian-labs
       name: homebrew-tap
-    install: |
-      bin.install "lore"
-      (bin/"glh").write_to bin.join("lore")
-      bin.install_symlink "lore" => "glh"
-    test: |
-      system "#{bin}/lore", "--version"
-      system "#{bin}/glh", "--version"
