@@ -2,7 +2,9 @@ package cli
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
+	"io"
 	"os"
 	"path/filepath"
 	"strings"
@@ -45,8 +47,30 @@ var hookMergeCmd = &cobra.Command{
 	RunE:  runHookMerge,
 }
 
+var hookFileWriteCmd = &cobra.Command{
+	Use:   "file-write <path> <source>",
+	Short: "Record a FileWrite task from an agent tool use",
+	Args:  cobra.ExactArgs(2),
+	RunE:  runHookFileWrite,
+}
+
+var hookCommandCmd = &cobra.Command{
+	Use:   "command <cmd> <source>",
+	Short: "Record a Command task from an agent tool use",
+	Args:  cobra.ExactArgs(2),
+	RunE:  runHookCommand,
+}
+
+var hookAgentRecapCmd = &cobra.Command{
+	Use:   "agent-recap <source>",
+	Short: "Ingest an agent recap from the Stop hook",
+	Args:  cobra.ExactArgs(1),
+	RunE:  runHookAgentRecap,
+}
+
 func init() {
-	hookCmd.AddCommand(hookCommitCmd, hookCheckoutCmd, hookMergeCmd)
+	hookCmd.AddCommand(hookCommitCmd, hookCheckoutCmd, hookMergeCmd,
+		hookFileWriteCmd, hookCommandCmd, hookAgentRecapCmd)
 }
 
 // --- cobra wrappers ---
@@ -91,6 +115,45 @@ func runHookMerge(cmd *cobra.Command, args []string) error {
 	}
 	defer s.Close()
 	return hookMerge(cmd.Context(), gitRoot, s)
+}
+
+func runHookFileWrite(cmd *cobra.Command, args []string) error {
+	loreRoot, err := findLoreRoot()
+	if err != nil {
+		return nil
+	}
+	s, err := store.Open(filepath.Join(loreRoot, "lore.db"))
+	if err != nil {
+		return nil
+	}
+	defer s.Close()
+	return hookFileWrite(cmd.Context(), args[0], args[1], s)
+}
+
+func runHookCommand(cmd *cobra.Command, args []string) error {
+	loreRoot, err := findLoreRoot()
+	if err != nil {
+		return nil
+	}
+	s, err := store.Open(filepath.Join(loreRoot, "lore.db"))
+	if err != nil {
+		return nil
+	}
+	defer s.Close()
+	return hookCommand(cmd.Context(), args[0], args[1], s)
+}
+
+func runHookAgentRecap(cmd *cobra.Command, args []string) error {
+	loreRoot, err := findLoreRoot()
+	if err != nil {
+		return nil
+	}
+	s, err := store.Open(filepath.Join(loreRoot, "lore.db"))
+	if err != nil {
+		return nil
+	}
+	defer s.Close()
+	return hookAgentRecap(cmd.Context(), args[0], os.Stdin, cmd.ErrOrStderr(), s)
 }
 
 // --- testable logic ---
@@ -219,6 +282,76 @@ func hookCheckout(ctx context.Context, gitRoot, prevRef, newRef, flag string, s 
 		Detail:     prevRef + "->" + branch,
 		Source:     "hook",
 		TrustLevel: 1,
+		TS:         time.Now().UnixNano(),
+	}
+	return s.InsertTask(ctx, t)
+}
+
+func hookFileWrite(ctx context.Context, path, source string, s *store.Store) error {
+	if strings.HasPrefix(path, ".lore/") {
+		return nil
+	}
+	t := task.Task{
+		ID:         uuid.NewString(),
+		Kind:       task.KindFileWrite,
+		Path:       path,
+		Source:     source,
+		TrustLevel: 2,
+		TS:         time.Now().UnixNano(),
+	}
+	return s.InsertTask(ctx, t)
+}
+
+func hookCommand(ctx context.Context, cmd, source string, s *store.Store) error {
+	t := task.Task{
+		ID:         uuid.NewString(),
+		Kind:       task.KindCommand,
+		Detail:     cmd,
+		Source:     source,
+		TrustLevel: 2,
+		TS:         time.Now().UnixNano(),
+	}
+	return s.InsertTask(ctx, t)
+}
+
+// hookAgentRecap reads a structured recap from the environment or r (stdin),
+// then inserts a KindAgentRecap task at TrustLevel=2.
+//
+// Priority: CLAUDE_STOP_HOOK_PAYLOAD → CLAUDE_SESSION_SUMMARY → r
+func hookAgentRecap(ctx context.Context, source string, r io.Reader, errW io.Writer, s *store.Store) error {
+	raw := os.Getenv("CLAUDE_STOP_HOOK_PAYLOAD")
+	if raw == "" {
+		raw = os.Getenv("CLAUDE_SESSION_SUMMARY")
+	}
+	if raw == "" {
+		data, err := io.ReadAll(r)
+		if err == nil {
+			raw = strings.TrimSpace(string(data))
+		}
+	}
+
+	detail := raw
+	if raw == "" {
+		fmt.Fprintln(errW, "lore: no agent recap found; recording minimal task")
+		payload := blob.AgentRecapPayload{Summary: "Agent session ended (no recap provided)"}
+		b, _ := json.Marshal(payload)
+		detail = string(b)
+	} else {
+		// Validate JSON; if malformed, wrap as summary.
+		var p blob.AgentRecapPayload
+		if err := json.Unmarshal([]byte(raw), &p); err != nil {
+			payload := blob.AgentRecapPayload{Summary: raw}
+			b, _ := json.Marshal(payload)
+			detail = string(b)
+		}
+	}
+
+	t := task.Task{
+		ID:         uuid.NewString(),
+		Kind:       task.KindAgentRecap,
+		Detail:     detail,
+		Source:     source,
+		TrustLevel: 2,
 		TS:         time.Now().UnixNano(),
 	}
 	return s.InsertTask(ctx, t)

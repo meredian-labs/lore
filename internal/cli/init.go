@@ -1,6 +1,7 @@
 package cli
 
 import (
+	"encoding/json"
 	"fmt"
 	"os"
 	"path/filepath"
@@ -36,6 +37,9 @@ func runInit(cmd *cobra.Command, args []string) error {
 		}
 		if err := git.WireHooksPath(gitRoot); err != nil {
 			return fmt.Errorf("wiring hooks: %w", err)
+		}
+		if err := writeClaudeSettings(gitRoot); err != nil {
+			return fmt.Errorf("writing claude settings: %w", err)
 		}
 		fmt.Fprintln(cmd.OutOrStdout(), "lore: hooks wired (core.hooksPath = .lore/hooks)")
 		return nil
@@ -78,10 +82,99 @@ func runInit(cmd *cobra.Command, args []string) error {
 		return fmt.Errorf("wiring hooks: %w", err)
 	}
 
-	// Step 10: print success.
+	// Step 10: write .claude/settings.json for Claude Code agent integration.
+	if err := writeClaudeSettings(gitRoot); err != nil {
+		return fmt.Errorf("writing claude settings: %w", err)
+	}
+
+	// Step 11: print success.
 	fmt.Fprintf(cmd.OutOrStdout(),
-		"Initialized lore repository in %s/\n  Database:    .lore/lore.db\n  Config:      .lore/config.toml\n  Git hooks:   .lore/hooks/ (core.hooksPath)\n\nCommit .lore/ to git. On clones, run 'lore init' to wire hooks.\n",
+		"Initialized lore repository in %s/\n  Database:    .lore/lore.db\n  Config:      .lore/config.toml\n  Git hooks:   .lore/hooks/ (core.hooksPath)\n  Claude Code: .claude/settings.json\n\nCommit .lore/ to git. On clones, run 'lore init' to wire hooks.\n",
 		loreRoot,
 	)
 	return nil
+}
+
+// claudeHook is one entry in a hooks event list in .claude/settings.json.
+type claudeHook struct {
+	Matcher string `json:"matcher,omitempty"`
+	Command string `json:"command"`
+}
+
+// loreHooks are the hook entries lore installs into .claude/settings.json.
+var loreHooks = map[string][]claudeHook{
+	"PostToolUse": {
+		{Matcher: "Edit", Command: `lore hook file-write "$TOOL_INPUT_file_path" agent:claude`},
+		{Matcher: "Write", Command: `lore hook file-write "$TOOL_INPUT_file_path" agent:claude`},
+		{Matcher: "Bash", Command: `lore hook command "$TOOL_INPUT_command" agent:claude`},
+	},
+	"Stop": {
+		{Command: "lore hook agent-recap agent:claude"},
+	},
+}
+
+// writeClaudeSettings writes (or merges) lore's hooks into .claude/settings.json.
+// Unknown top-level keys in an existing file are preserved.
+func writeClaudeSettings(gitRoot string) error {
+	claudeDir := filepath.Join(gitRoot, ".claude")
+	if err := os.MkdirAll(claudeDir, 0755); err != nil {
+		return err
+	}
+	settingsPath := filepath.Join(claudeDir, "settings.json")
+
+	// Load existing file as a raw map to preserve unknown keys.
+	rawMap := map[string]json.RawMessage{}
+	if data, err := os.ReadFile(settingsPath); err == nil {
+		json.Unmarshal(data, &rawMap)
+	}
+
+	// Parse existing hooks section (best-effort).
+	existingHooks := map[string][]claudeHook{}
+	if hookRaw, ok := rawMap["hooks"]; ok {
+		json.Unmarshal(hookRaw, &existingHooks)
+	}
+
+	// Merge: add lore entries that aren't already present.
+	for event, hooks := range loreHooks {
+		cur := existingHooks[event]
+		for _, h := range hooks {
+			if !hookEntryExists(cur, h) {
+				cur = append(cur, h)
+			}
+		}
+		existingHooks[event] = cur
+	}
+
+	hookBytes, err := json.Marshal(existingHooks)
+	if err != nil {
+		return err
+	}
+	rawMap["hooks"] = json.RawMessage(hookBytes)
+
+	out, err := json.MarshalIndent(rawMap, "", "  ")
+	if err != nil {
+		return err
+	}
+	return os.WriteFile(settingsPath, append(out, '\n'), 0644)
+}
+
+// hookEntryExists reports whether an identical (matcher, command) entry already exists.
+func hookEntryExists(hooks []claudeHook, h claudeHook) bool {
+	for _, existing := range hooks {
+		if existing.Matcher == h.Matcher && existing.Command == h.Command {
+			return true
+		}
+	}
+	return false
+}
+
+// hookCommandExists reports whether any entry with the given command exists.
+// Used by tests that check for presence of a specific command regardless of matcher.
+func hookCommandExists(hooks []claudeHook, cmd string) bool {
+	for _, h := range hooks {
+		if h.Command == cmd {
+			return true
+		}
+	}
+	return false
 }
