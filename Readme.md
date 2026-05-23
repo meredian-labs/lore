@@ -130,11 +130,11 @@ All data is stored locally in `.lore/lore.db` (SQLite). Nothing leaves your mach
 
 ## Documentation
 
-Full documentation: [https://lore.hirobin.ai/docs](https://lore.hirobin.ai/docs)
+Full documentation: [lore](https://meredian-labs.github.io/lore/)
 
-- [CLI Reference](https://lore.hirobin.ai/docs/cli/init)
-- [Architecture](https://lore.hirobin.ai/docs/architecture/storage)
-- [Trust Model](https://lore.hirobin.ai/docs/architecture/trust-model)
+- [CLI Reference](https://meredian-labs.github.io/lore/cli/init)
+- [Architecture](https://meredian-labs.github.io/lore/architecture/storage)
+- [Trust Model](https://meredian-labs.github.io/lore/architecture/trust-model)
 
 ---
 
