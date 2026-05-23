@@ -18,6 +18,10 @@ var showCmd = &cobra.Command{
 	RunE:  runShow,
 }
 
+func init() {
+	showCmd.Flags().Bool("json", false, "Output as JSON")
+}
+
 func runShow(cmd *cobra.Command, args []string) error {
 	loreRoot, err := findLoreRoot()
 	if err != nil {
@@ -51,6 +55,17 @@ func runShow(cmd *cobra.Command, args []string) error {
 	cmds, err := s.BlobCommands(cmd.Context(), fullID)
 	if err != nil {
 		return err
+	}
+
+	asJSON, _ := cmd.Flags().GetBool("json")
+	if asJSON {
+		var nodeRef *NodeRefJSON
+		if b.PrimaryNodeID != "" {
+			if n, nErr := s.NodeByID(cmd.Context(), b.PrimaryNodeID); nErr == nil {
+				nodeRef = &NodeRefJSON{ID: n.ID, Title: n.Title}
+			}
+		}
+		return writeJSON(cmd.OutOrStdout(), blobToJSON(b, files, cmds, nodeRef))
 	}
 
 	out := cmd.OutOrStdout()

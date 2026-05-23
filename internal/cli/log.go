@@ -22,6 +22,7 @@ var logCmd = &cobra.Command{
 
 func init() {
 	logCmd.Flags().IntVarP(&logLimit, "limit", "n", 20, "Maximum number of blobs to show")
+	logCmd.Flags().Bool("json", false, "Output as JSON array")
 }
 
 func runLog(cmd *cobra.Command, args []string) error {
@@ -38,6 +39,18 @@ func runLog(cmd *cobra.Command, args []string) error {
 	blobs, err := s.BlobLog(cmd.Context(), logLimit)
 	if err != nil {
 		return fmt.Errorf("fetching blobs: %w", err)
+	}
+
+	asJSON, _ := cmd.Flags().GetBool("json")
+	if asJSON {
+		var out []BlobJSON
+		for _, b := range blobs {
+			out = append(out, blobToJSON(b, nil, nil, nil))
+		}
+		if out == nil {
+			out = []BlobJSON{}
+		}
+		return writeJSON(cmd.OutOrStdout(), out)
 	}
 
 	if len(blobs) == 0 {
