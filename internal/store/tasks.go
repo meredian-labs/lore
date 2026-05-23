@@ -122,6 +122,22 @@ func boolToInt(b bool) int {
 	return 0
 }
 
+// TasksExtractedInto returns all tasks that were absorbed into the given blob,
+// ordered by timestamp. Returns an empty slice (not an error) when tasks have
+// been purged or the blob had no tasks.
+func (s *Store) TasksExtractedInto(ctx context.Context, blobID string) ([]task.Task, error) {
+	rows, err := s.db.QueryContext(ctx,
+		`SELECT id, kind, path, detail, source, trust_level, ts, extracted, extracted_into
+		 FROM tasks WHERE extracted_into = ? ORDER BY ts ASC`,
+		blobID,
+	)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	return scanTasks(rows)
+}
+
 func (s *Store) TaskByKindInWindow(ctx context.Context, kind task.TaskKind) (*task.Task, error) {
 	var t task.Task
 	var k string
