@@ -41,10 +41,4 @@ changelog:
       - "^test:"
       - "Merge pull request"
 
-homebrew_casks:
-  - name: lore
-    homepage: https://github.com/meredian-labs/lore
-    description: "Local-first engineering memory system"
-    repository:
-      owner: meredian-labs
-      name: homebrew-tap
+# Homebrew formula is maintained by `make tap` (see Makefile)

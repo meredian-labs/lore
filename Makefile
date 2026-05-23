@@ -8,7 +8,7 @@ LDFLAGS     = -ldflags "-s -w \
   -X github.com/nishchay/lore/internal/cli.BuildDate=$(BUILD_DATE)"
 INSTALL_DIR ?= /usr/local/bin
 
-.PHONY: build test lint install install-glh clean release snapshot
+.PHONY: build test lint install install-glh clean release snapshot tap
 
 build:
 	go build $(LDFLAGS) -o $(BINARY) ./cmd/lore
@@ -34,3 +34,8 @@ release:
 
 snapshot:
 	goreleaser release --snapshot --clean --skip=publish
+
+# Update the Homebrew tap formula for the latest git tag.
+# Usage: make tap  (uses the most recent tag automatically)
+tap:
+	@scripts/update-tap.sh
