@@ -5,6 +5,7 @@ import (
 	"path/filepath"
 
 	"github.com/nishchay/lore/internal/blob"
+	"github.com/nishchay/lore/internal/node"
 	"github.com/nishchay/lore/internal/store"
 )
 
@@ -97,4 +98,49 @@ func (b *Builder) UpdateFromBlob(ctx context.Context, bl blob.Blob) error {
 	}
 
 	return nil
+}
+
+// UpdateFromNode upserts a Topic graph node for the given subsystem Node.
+func (b *Builder) UpdateFromNode(ctx context.Context, n node.Node) error {
+	_, err := b.s.UpsertGraphNode(ctx, store.GraphNode{
+		Kind:  "Topic",
+		Label: n.Title,
+		Ref:   n.ID,
+	})
+	return err
+}
+
+// UpdateAssignment creates a Contains edge from the Topic (node) to the Blob
+// in the knowledge graph, reflecting a human assignment.
+func (b *Builder) UpdateAssignment(ctx context.Context, blobID, nodeID string) error {
+	n, err := b.s.NodeByID(ctx, nodeID)
+	if err != nil {
+		return err
+	}
+	bl, err := b.s.BlobByID(ctx, blobID)
+	if err != nil {
+		return err
+	}
+
+	topicID, err := b.s.UpsertGraphNode(ctx, store.GraphNode{
+		Kind:  "Topic",
+		Label: n.Title,
+		Ref:   nodeID,
+	})
+	if err != nil {
+		return err
+	}
+	blobGNodeID, err := b.s.UpsertGraphNode(ctx, store.GraphNode{
+		Kind:  "Blob",
+		Label: bl.Title,
+		Ref:   blobID,
+	})
+	if err != nil {
+		return err
+	}
+	return b.s.UpsertGraphEdge(ctx, store.GraphEdge{
+		FromID:   topicID,
+		ToID:     blobGNodeID,
+		Relation: "Contains",
+	})
 }

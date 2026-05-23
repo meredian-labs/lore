@@ -17,7 +17,7 @@ func main() {
 		case errors.Is(err, cli.ErrUsage):
 			os.Exit(2)
 		default:
-			fmt.Fprintf(os.Stderr, "error: %v\n", err)
+			fmt.Fprintf(os.Stderr, "%v\n", err)
 			os.Exit(1)
 		}
 	}

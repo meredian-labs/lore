@@ -3,9 +3,12 @@ package graph_test
 import (
 	"context"
 	"testing"
+	"time"
 
+	"github.com/google/uuid"
 	"github.com/nishchay/lore/internal/blob"
 	"github.com/nishchay/lore/internal/graph"
+	"github.com/nishchay/lore/internal/node"
 	"github.com/nishchay/lore/internal/store"
 )
 
@@ -161,5 +164,110 @@ func TestUpdateFromBlob_EdgeWeightIncrement(t *testing.T) {
 	// blob-w1 node + blob-w2 node + shared-sha commit node = 3
 	if nodeCount != 3 {
 		t.Errorf("expected 3 graph nodes (2 blobs + 1 shared commit), got %d", nodeCount)
+	}
+}
+
+func TestUpdateFromNode_CreatesTopicGraphNode(t *testing.T) {
+	s := openTestStore(t)
+	now := time.Now().UnixNano()
+	n := node.Node{
+		ID:        uuid.NewString(),
+		Title:     "Authentication",
+		Status:    "active",
+		CreatedBy: "user",
+		CreatedAt: now,
+		UpdatedAt: now,
+	}
+	if err := s.InsertNode(context.Background(), n); err != nil {
+		t.Fatalf("InsertNode: %v", err)
+	}
+
+	builder := graph.New(s)
+	if err := builder.UpdateFromNode(context.Background(), n); err != nil {
+		t.Fatalf("UpdateFromNode: %v", err)
+	}
+
+	count, _ := s.GraphNodeCount(context.Background())
+	if count != 1 {
+		t.Errorf("expected 1 Topic graph node, got %d", count)
+	}
+}
+
+func TestUpdateAssignment_CreatesContainsEdge(t *testing.T) {
+	s := openTestStore(t)
+	ctx := context.Background()
+	now := time.Now().UnixNano()
+
+	n := node.Node{
+		ID:        uuid.NewString(),
+		Title:     "Auth",
+		Status:    "active",
+		CreatedBy: "user",
+		CreatedAt: now,
+		UpdatedAt: now,
+	}
+	if err := s.InsertNode(ctx, n); err != nil {
+		t.Fatalf("InsertNode: %v", err)
+	}
+
+	b := blob.Blob{
+		ID: uuid.NewString(), Kind: blob.KindFeature, Title: "OAuth impl",
+		TrustLevel: 4, AISource: "lore:heuristic",
+		StartedAt: now, EndedAt: now, CreatedAt: now,
+	}
+	insertTestBlob(t, s, b, nil)
+
+	builder := graph.New(s)
+	if err := builder.UpdateFromBlob(ctx, b); err != nil {
+		t.Fatalf("UpdateFromBlob: %v", err)
+	}
+	if err := builder.UpdateFromNode(ctx, n); err != nil {
+		t.Fatalf("UpdateFromNode: %v", err)
+	}
+	if err := builder.UpdateAssignment(ctx, b.ID, n.ID); err != nil {
+		t.Fatalf("UpdateAssignment: %v", err)
+	}
+
+	edgeCount, _ := s.GraphEdgeCount(ctx)
+	// Must have at least one Contains edge from Topic→Blob.
+	if edgeCount < 1 {
+		t.Errorf("expected at least 1 edge (Contains), got %d", edgeCount)
+	}
+}
+
+func TestUpdateAssignment_WeightIncrements(t *testing.T) {
+	s := openTestStore(t)
+	ctx := context.Background()
+	now := time.Now().UnixNano()
+
+	n := node.Node{
+		ID:        uuid.NewString(),
+		Title:     "Billing",
+		Status:    "active",
+		CreatedBy: "user",
+		CreatedAt: now,
+		UpdatedAt: now,
+	}
+	s.InsertNode(ctx, n)
+
+	b := blob.Blob{
+		ID: uuid.NewString(), Kind: blob.KindFeature, Title: "Payment impl",
+		TrustLevel: 4, AISource: "lore:heuristic",
+		StartedAt: now, EndedAt: now, CreatedAt: now,
+	}
+	insertTestBlob(t, s, b, nil)
+
+	builder := graph.New(s)
+	builder.UpdateFromBlob(ctx, b)
+	builder.UpdateFromNode(ctx, n)
+
+	// Call UpdateAssignment twice — edge count must stay the same (upserted).
+	builder.UpdateAssignment(ctx, b.ID, n.ID)
+	builder.UpdateAssignment(ctx, b.ID, n.ID)
+
+	edgeCount, _ := s.GraphEdgeCount(ctx)
+	// Still only 1 Contains edge (weight incremented internally, not duplicated).
+	if edgeCount != 1 {
+		t.Errorf("expected 1 edge after idempotent UpdateAssignment, got %d", edgeCount)
 	}
 }
