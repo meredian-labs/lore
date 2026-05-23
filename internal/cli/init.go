@@ -6,9 +6,9 @@ import (
 	"os"
 	"path/filepath"
 
-	"github.com/nishchay/lore/internal/config"
-	"github.com/nishchay/lore/internal/git"
-	"github.com/nishchay/lore/internal/store"
+	"github.com/meredian-labs/lore/internal/config"
+	"github.com/meredian-labs/lore/internal/git"
+	"github.com/meredian-labs/lore/internal/store"
 	"github.com/spf13/cobra"
 )
 

@@ -7,11 +7,14 @@
 ## Install
 
 ```bash
-go install github.com/hirobin/lore/cmd/lore@latest
-go install github.com/hirobin/lore/cmd/glh@latest
+# Homebrew (recommended)
+brew tap meredian-labs/tap
+brew install lore
 
-# Add glh to your PATH
-ln -s ~/go/bin/glh /usr/local/bin/glh
+# Or via go install
+go install github.com/meredian-labs/lore/cmd/lore@latest
+
+# glh is a symlink installed alongside lore — no extra step needed
 ```
 
 ---

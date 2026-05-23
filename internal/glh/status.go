@@ -8,8 +8,8 @@ import (
 	"strings"
 	"time"
 
-	"github.com/nishchay/lore/internal/blob"
-	"github.com/nishchay/lore/internal/store"
+	"github.com/meredian-labs/lore/internal/blob"
+	"github.com/meredian-labs/lore/internal/store"
 )
 
 func runStatus(args []string) int {

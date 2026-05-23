@@ -1,4 +1,4 @@
-module github.com/nishchay/lore
+module github.com/meredian-labs/lore
 
 go 1.25.0
 

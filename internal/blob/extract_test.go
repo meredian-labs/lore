@@ -5,8 +5,8 @@ import (
 	"errors"
 	"testing"
 
-	"github.com/nishchay/lore/internal/config"
-	"github.com/nishchay/lore/internal/task"
+	"github.com/meredian-labs/lore/internal/config"
+	"github.com/meredian-labs/lore/internal/task"
 )
 
 // fakeStore satisfies blob.Storer for testing.

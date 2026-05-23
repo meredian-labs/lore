@@ -9,10 +9,10 @@ import (
 	"time"
 
 	"github.com/google/uuid"
-	"github.com/nishchay/lore/internal/blob"
-	"github.com/nishchay/lore/internal/mcp"
-	"github.com/nishchay/lore/internal/store"
-	"github.com/nishchay/lore/internal/task"
+	"github.com/meredian-labs/lore/internal/blob"
+	"github.com/meredian-labs/lore/internal/mcp"
+	"github.com/meredian-labs/lore/internal/store"
+	"github.com/meredian-labs/lore/internal/task"
 	"github.com/spf13/cobra"
 )
 

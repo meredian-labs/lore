@@ -3,7 +3,7 @@ package blob
 import (
 	"testing"
 
-	"github.com/nishchay/lore/internal/task"
+	"github.com/meredian-labs/lore/internal/task"
 )
 
 func TestBuildWindow_Empty(t *testing.T) {

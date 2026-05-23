@@ -4,9 +4,9 @@ import (
 	"context"
 	"path/filepath"
 
-	"github.com/nishchay/lore/internal/blob"
-	"github.com/nishchay/lore/internal/node"
-	"github.com/nishchay/lore/internal/store"
+	"github.com/meredian-labs/lore/internal/blob"
+	"github.com/meredian-labs/lore/internal/node"
+	"github.com/meredian-labs/lore/internal/store"
 )
 
 // Builder derives graph nodes and edges from Blobs and writes them to the store.

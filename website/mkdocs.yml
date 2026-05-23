@@ -1,7 +1,7 @@
 site_name: Lore
 site_description: Git stores what changed. Lore stores why it changed.
 site_url: https://nishchay.github.io/lore/
-repo_url: https://github.com/nishchay/lore
+repo_url: https://github.com/meredian-labs/lore
 repo_name: nishchay/lore
 edit_uri: edit/main/website/docs/
 

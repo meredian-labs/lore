@@ -7,9 +7,9 @@ import (
 	"time"
 
 	"github.com/google/uuid"
-	"github.com/nishchay/lore/internal/blob"
-	"github.com/nishchay/lore/internal/node"
-	"github.com/nishchay/lore/internal/task"
+	"github.com/meredian-labs/lore/internal/blob"
+	"github.com/meredian-labs/lore/internal/node"
+	"github.com/meredian-labs/lore/internal/task"
 )
 
 func openMemory(t *testing.T) *Store {

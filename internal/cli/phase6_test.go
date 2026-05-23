@@ -9,8 +9,8 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/nishchay/lore/internal/blob"
-	"github.com/nishchay/lore/internal/task"
+	"github.com/meredian-labs/lore/internal/blob"
+	"github.com/meredian-labs/lore/internal/task"
 )
 
 func TestHookFileWrite_InsertsFileWriteTask(t *testing.T) {

@@ -6,8 +6,8 @@ import (
 	"os"
 	"path/filepath"
 
-	"github.com/nishchay/lore/internal/cli"
-	"github.com/nishchay/lore/internal/glh"
+	"github.com/meredian-labs/lore/internal/cli"
+	"github.com/meredian-labs/lore/internal/glh"
 )
 
 func main() {

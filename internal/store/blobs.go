@@ -8,7 +8,7 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/nishchay/lore/internal/blob"
+	"github.com/meredian-labs/lore/internal/blob"
 )
 
 func (s *Store) InsertBlobWithRelations(

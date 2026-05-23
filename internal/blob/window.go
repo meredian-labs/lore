@@ -3,7 +3,7 @@ package blob
 import (
 	"strings"
 
-	"github.com/nishchay/lore/internal/task"
+	"github.com/meredian-labs/lore/internal/task"
 )
 
 // Window is a fully-assembled extraction window derived from pending tasks.

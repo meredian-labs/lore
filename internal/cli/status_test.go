@@ -9,9 +9,9 @@ import (
 	"time"
 
 	"github.com/google/uuid"
-	"github.com/nishchay/lore/internal/blob"
-	"github.com/nishchay/lore/internal/graph"
-	"github.com/nishchay/lore/internal/store"
+	"github.com/meredian-labs/lore/internal/blob"
+	"github.com/meredian-labs/lore/internal/graph"
+	"github.com/meredian-labs/lore/internal/store"
 )
 
 func insertTestBlobDirect(t *testing.T, s *store.Store, kind blob.BlobKind, trust int, ts int64) blob.Blob {

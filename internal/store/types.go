@@ -1,6 +1,6 @@
 package store
 
-import "github.com/nishchay/lore/internal/blob"
+import "github.com/meredian-labs/lore/internal/blob"
 
 // BlobFile and BlobCommand are defined in internal/blob to avoid circular
 // imports. These aliases let existing store code use the unqualified names.

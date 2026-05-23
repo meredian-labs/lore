@@ -8,7 +8,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/nishchay/lore/internal/task"
+	"github.com/meredian-labs/lore/internal/task"
 )
 
 func (s *Store) InsertTask(ctx context.Context, t task.Task) error {

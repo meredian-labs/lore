@@ -7,8 +7,8 @@ import (
 	"io"
 	"path/filepath"
 
-	"github.com/nishchay/lore/internal/graph"
-	"github.com/nishchay/lore/internal/store"
+	"github.com/meredian-labs/lore/internal/graph"
+	"github.com/meredian-labs/lore/internal/store"
 	"github.com/spf13/cobra"
 )
 

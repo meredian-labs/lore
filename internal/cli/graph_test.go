@@ -7,7 +7,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/nishchay/lore/internal/graph"
+	"github.com/meredian-labs/lore/internal/graph"
 )
 
 func TestGraphRender_SubsystemsBeforeUnassigned(t *testing.T) {

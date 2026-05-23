@@ -11,12 +11,12 @@ import (
 	"time"
 
 	"github.com/google/uuid"
-	"github.com/nishchay/lore/internal/blob"
-	"github.com/nishchay/lore/internal/config"
-	gitpkg "github.com/nishchay/lore/internal/git"
-	"github.com/nishchay/lore/internal/graph"
-	"github.com/nishchay/lore/internal/store"
-	"github.com/nishchay/lore/internal/task"
+	"github.com/meredian-labs/lore/internal/blob"
+	"github.com/meredian-labs/lore/internal/config"
+	gitpkg "github.com/meredian-labs/lore/internal/git"
+	"github.com/meredian-labs/lore/internal/graph"
+	"github.com/meredian-labs/lore/internal/store"
+	"github.com/meredian-labs/lore/internal/task"
 	"github.com/spf13/cobra"
 )
 

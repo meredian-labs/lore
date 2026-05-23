@@ -6,8 +6,8 @@ import (
 	"time"
 
 	"github.com/google/uuid"
-	"github.com/nishchay/lore/internal/config"
-	"github.com/nishchay/lore/internal/task"
+	"github.com/meredian-labs/lore/internal/config"
+	"github.com/meredian-labs/lore/internal/task"
 )
 
 // Storer is the storage interface ExtractIfReady needs.

@@ -6,7 +6,7 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/nishchay/lore/internal/graph"
+	"github.com/meredian-labs/lore/internal/graph"
 )
 
 func TestNodeCreate_Succeeds(t *testing.T) {

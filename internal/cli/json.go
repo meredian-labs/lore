@@ -4,8 +4,8 @@ import (
 	"encoding/json"
 	"io"
 
-	"github.com/nishchay/lore/internal/blob"
-	"github.com/nishchay/lore/internal/store"
+	"github.com/meredian-labs/lore/internal/blob"
+	"github.com/meredian-labs/lore/internal/store"
 )
 
 // JSON output structs — used by --json flag on all query commands.

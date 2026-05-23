@@ -19,9 +19,9 @@ builds:
       - arm64
     ldflags:
       - -s -w
-      - -X github.com/nishchay/lore/internal/cli.Version={{.Version}}
-      - -X github.com/nishchay/lore/internal/cli.Commit={{.ShortCommit}}
-      - -X github.com/nishchay/lore/internal/cli.BuildDate={{.Date}}
+      - -X github.com/meredian-labs/lore/internal/cli.Version={{.Version}}
+      - -X github.com/meredian-labs/lore/internal/cli.Commit={{.ShortCommit}}
+      - -X github.com/meredian-labs/lore/internal/cli.BuildDate={{.Date}}
 
 archives:
   - formats: [tar.gz]

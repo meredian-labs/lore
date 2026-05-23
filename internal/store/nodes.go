@@ -6,8 +6,8 @@ import (
 	"errors"
 	"strings"
 
-	"github.com/nishchay/lore/internal/blob"
-	"github.com/nishchay/lore/internal/node"
+	"github.com/meredian-labs/lore/internal/blob"
+	"github.com/meredian-labs/lore/internal/node"
 )
 
 func (s *Store) InsertNode(ctx context.Context, n node.Node) error {
