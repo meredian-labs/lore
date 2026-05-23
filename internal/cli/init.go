@@ -1,25 +1,15 @@
 package cli
 
 import (
-	"bufio"
 	"fmt"
 	"os"
 	"path/filepath"
-	"strings"
 
 	"github.com/nishchay/lore/internal/config"
 	"github.com/nishchay/lore/internal/git"
 	"github.com/nishchay/lore/internal/store"
 	"github.com/spf13/cobra"
 )
-
-func loreExecutable() string {
-	exe, err := os.Executable()
-	if err != nil {
-		return "lore"
-	}
-	return exe
-}
 
 var initCmd = &cobra.Command{
 	Use:   "init",
@@ -38,9 +28,16 @@ func runInit(cmd *cobra.Command, args []string) error {
 	// Step 2: compute lore root.
 	loreRoot := filepath.Join(gitRoot, ".lore")
 
-	// Step 3: idempotent check.
+	// Step 3: clone case — .lore/ already exists (committed in the repo).
+	// Ensure hook scripts exist and wire core.hooksPath; skip db and config.
 	if _, err := os.Stat(loreRoot); err == nil {
-		fmt.Fprintln(cmd.OutOrStdout(), "lore: already initialized")
+		if err := git.WriteHookScripts(loreRoot); err != nil {
+			return fmt.Errorf("writing hook scripts: %w", err)
+		}
+		if err := git.WireHooksPath(gitRoot); err != nil {
+			return fmt.Errorf("wiring hooks: %w", err)
+		}
+		fmt.Fprintln(cmd.OutOrStdout(), "lore: hooks wired (core.hooksPath = .lore/hooks)")
 		return nil
 	}
 
@@ -64,44 +61,27 @@ func runInit(cmd *cobra.Command, args []string) error {
 		return fmt.Errorf("writing config: %w", err)
 	}
 
-	// Step 7: install git hooks using the absolute path to the running binary.
-	if err := git.InstallHooks(gitRoot, loreExecutable()); err != nil {
-		return fmt.Errorf("installing hooks: %w", err)
+	// Step 7: write .lore/.gitignore to exclude cache only.
+	// lore.db, config.toml, and hooks/ are intentionally committed so clones
+	// get the full knowledge history and hook scripts.
+	if err := os.WriteFile(filepath.Join(loreRoot, ".gitignore"), []byte("cache/\n"), 0644); err != nil {
+		return fmt.Errorf("writing .lore/.gitignore: %w", err)
 	}
 
-	// Step 8: append .lore/ to .gitignore if not already present.
-	if err := ensureGitignore(gitRoot); err != nil {
-		return fmt.Errorf("updating .gitignore: %w", err)
+	// Step 8: write hook scripts into .lore/hooks/ (committed with the repo).
+	if err := git.WriteHookScripts(loreRoot); err != nil {
+		return fmt.Errorf("writing hook scripts: %w", err)
 	}
 
-	// Step 9: print success.
+	// Step 9: wire core.hooksPath so git uses .lore/hooks/.
+	if err := git.WireHooksPath(gitRoot); err != nil {
+		return fmt.Errorf("wiring hooks: %w", err)
+	}
+
+	// Step 10: print success.
 	fmt.Fprintf(cmd.OutOrStdout(),
-		"Initialized lore repository in %s/\n  Database:    .lore/lore.db\n  Config:      .lore/config.toml\n  Git hooks:   post-commit, post-checkout, post-merge\n\nRun 'lore doctor' to verify the installation.\n",
+		"Initialized lore repository in %s/\n  Database:    .lore/lore.db\n  Config:      .lore/config.toml\n  Git hooks:   .lore/hooks/ (core.hooksPath)\n\nCommit .lore/ to git. On clones, run 'lore init' to wire hooks.\n",
 		loreRoot,
 	)
 	return nil
-}
-
-func ensureGitignore(gitRoot string) error {
-	giPath := filepath.Join(gitRoot, ".gitignore")
-	const entry = ".lore/"
-
-	content, err := os.ReadFile(giPath)
-	if err == nil {
-		scanner := bufio.NewScanner(strings.NewReader(string(content)))
-		for scanner.Scan() {
-			if strings.TrimSpace(scanner.Text()) == entry {
-				return nil // already present
-			}
-		}
-		f, err := os.OpenFile(giPath, os.O_APPEND|os.O_WRONLY, 0644)
-		if err != nil {
-			return err
-		}
-		defer f.Close()
-		_, err = fmt.Fprintf(f, "\n%s\n", entry)
-		return err
-	}
-
-	return os.WriteFile(giPath, []byte(entry+"\n"), 0644)
 }
