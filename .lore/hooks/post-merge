@@ -1,3 +1,4 @@
 #!/bin/sh
 # Managed by lore — do not edit manually
+export PATH="$PATH:$HOME/go/bin:/opt/homebrew/bin:/usr/local/bin"
 lore hook merge

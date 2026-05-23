@@ -5,15 +5,19 @@ import (
 	"os"
 	"os/exec"
 	"path/filepath"
-	"strings"
 )
 
 const loreManagedHeader = "# Managed by lore — do not edit manually"
 
+// pathSetup is prepended to every hook so lore is found regardless of how git
+// was launched. Covers go install (~/.go/bin), Homebrew (Apple Silicon and
+// Intel), and manual installs (/usr/local/bin). Appended so user PATH wins.
+const pathSetup = `export PATH="$PATH:$HOME/go/bin:/opt/homebrew/bin:/usr/local/bin"` + "\n"
+
 var hookScripts = map[string]string{
-	"post-commit":   "#!/bin/sh\n" + loreManagedHeader + "\nlore hook commit\n",
-	"post-checkout": "#!/bin/sh\n" + loreManagedHeader + "\nlore hook checkout \"$1\" \"$2\" \"$3\"\n",
-	"post-merge":    "#!/bin/sh\n" + loreManagedHeader + "\nlore hook merge\n",
+	"post-commit":   "#!/bin/sh\n" + loreManagedHeader + "\n" + pathSetup + "lore hook commit\n",
+	"post-checkout": "#!/bin/sh\n" + loreManagedHeader + "\n" + pathSetup + "lore hook checkout \"$1\" \"$2\" \"$3\"\n",
+	"post-merge":    "#!/bin/sh\n" + loreManagedHeader + "\n" + pathSetup + "lore hook merge\n",
 }
 
 // WriteHookScripts writes lore-managed hook scripts into loreRoot/hooks/.
@@ -26,10 +30,6 @@ func WriteHookScripts(loreRoot string) error {
 	}
 	for name, content := range hookScripts {
 		hookPath := filepath.Join(hooksDir, name)
-		existing, err := os.ReadFile(hookPath)
-		if err == nil && strings.Contains(string(existing), loreManagedHeader) {
-			continue
-		}
 		if err := os.WriteFile(hookPath, []byte(content), 0755); err != nil {
 			return fmt.Errorf("writing hook %s: %w", name, err)
 		}
