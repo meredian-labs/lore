@@ -16,3 +16,17 @@ func Output(ctx context.Context, dir string, args ...string) (string, error) {
 	}
 	return strings.TrimSpace(string(out)), nil
 }
+
+// CommitDB stages .lore/lore.db and creates a "lore: checkpoint" commit.
+// Errors are intentionally ignored — a failed auto-commit leaves lore.db dirty
+// but never blocks the user's git workflow.
+func CommitDB(dir string) {
+	add := exec.Command("git", "add", ".lore/lore.db")
+	add.Dir = dir
+	if err := add.Run(); err != nil {
+		return
+	}
+	commit := exec.Command("git", "commit", "-m", "lore: checkpoint")
+	commit.Dir = dir
+	commit.Run()
+}

@@ -112,6 +112,11 @@ func hookCommit(ctx context.Context, gitRoot string, s *store.Store) error {
 		subject = lines[1]
 	}
 
+	// lore's own checkpoint commits — skip entirely to prevent an extraction loop.
+	if strings.HasPrefix(subject, "lore: ") {
+		return nil
+	}
+
 	var tasks []task.Task
 
 	// CommitCreated task.
@@ -126,6 +131,7 @@ func hookCommit(ctx context.Context, gitRoot string, s *store.Store) error {
 
 	// File change tasks from diff-tree.
 	// --root ensures the initial commit (no parent) also emits file entries.
+	// .lore/ paths are filtered: they are lore-internal and not source knowledge.
 	diffOut, err := gitpkg.Output(ctx, gitRoot, "diff-tree", "--root", "--no-commit-id", "-r", "--name-status", "HEAD")
 	if err == nil && diffOut != "" {
 		for _, line := range strings.Split(diffOut, "\n") {
@@ -137,23 +143,29 @@ func hookCommit(ctx context.Context, gitRoot string, s *store.Store) error {
 				continue
 			}
 			status := parts[0]
+			path := parts[1]
+			if strings.HasPrefix(path, ".lore/") {
+				continue
+			}
 			switch {
 			case status == "A" || status == "M":
 				tasks = append(tasks, task.Task{
 					ID: uuid.NewString(), Kind: task.KindFileWrite,
-					Path: parts[1], Source: "hook", TrustLevel: 1, TS: now,
+					Path: path, Source: "hook", TrustLevel: 1, TS: now,
 				})
 			case status == "D":
 				tasks = append(tasks, task.Task{
 					ID: uuid.NewString(), Kind: task.KindFileDelete,
-					Path: parts[1], Source: "hook", TrustLevel: 1, TS: now,
+					Path: path, Source: "hook", TrustLevel: 1, TS: now,
 				})
 			case strings.HasPrefix(status, "R") && len(parts) >= 3:
-				tasks = append(tasks, task.Task{
-					ID: uuid.NewString(), Kind: task.KindFileRename,
-					Detail: parts[1] + " -> " + parts[2],
-					Source: "hook", TrustLevel: 1, TS: now,
-				})
+				if !strings.HasPrefix(parts[2], ".lore/") {
+					tasks = append(tasks, task.Task{
+						ID: uuid.NewString(), Kind: task.KindFileRename,
+						Detail: path + " -> " + parts[2],
+						Source: "hook", TrustLevel: 1, TS: now,
+					})
+				}
 			}
 		}
 	}
@@ -163,7 +175,34 @@ func hookCommit(ctx context.Context, gitRoot string, s *store.Store) error {
 	}
 
 	cfg, _ := config.Load(filepath.Join(filepath.Dir(gitRoot), ".lore"))
-	return blob.ExtractIfReady(ctx, s, graph.New(s), cfg)
+	if err := blob.ExtractIfReady(ctx, s, graph.New(s), cfg); err != nil {
+		return err
+	}
+
+	// Insert a checkpoint blob for this DB state, then commit lore.db so
+	// the working tree stays clean after every commit.
+	sha7 := sha
+	if len(sha7) > 7 {
+		sha7 = sha7[:7]
+	}
+	checkpoint := blob.Blob{
+		ID:         uuid.NewString(),
+		Title:      "Lore knowledge base checkpoint",
+		Kind:       blob.KindCheckpoint,
+		Summary:    "Knowledge base updated after commit " + sha7,
+		AISource:   "lore:system",
+		TrustLevel: 1,
+		StartedAt:  now,
+		EndedAt:    now,
+		CreatedAt:  now,
+	}
+	checkpointFile := store.BlobFile{BlobID: checkpoint.ID, Path: ".lore/lore.db", Role: "written"}
+	if err := s.InsertBlobWithRelations(ctx, checkpoint, []store.BlobFile{checkpointFile}, nil, nil); err != nil {
+		return fmt.Errorf("inserting checkpoint blob: %w", err)
+	}
+
+	gitpkg.CommitDB(gitRoot)
+	return nil
 }
 
 func hookCheckout(ctx context.Context, gitRoot, prevRef, newRef, flag string, s *store.Store) error {

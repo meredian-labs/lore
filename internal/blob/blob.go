@@ -11,6 +11,7 @@ const (
 	KindArchitecture  BlobKind = "Architecture"
 	KindReview        BlobKind = "Review"
 	KindIncident      BlobKind = "Incident"
+	KindCheckpoint    BlobKind = "Checkpoint" // lore internal: knowledge base state snapshot
 )
 
 type Blob struct {

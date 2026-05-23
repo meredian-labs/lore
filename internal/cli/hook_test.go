@@ -8,6 +8,7 @@ import (
 	"strings"
 	"testing"
 
+	"github.com/nishchay/lore/internal/blob"
 	"github.com/nishchay/lore/internal/store"
 	"github.com/nishchay/lore/internal/task"
 )
@@ -74,6 +75,17 @@ func tasksOfKind(tasks []task.Task, kind task.TaskKind) []task.Task {
 
 var testCtx = context.Background()
 
+// nonCheckpointBlobs filters out KindCheckpoint blobs from a list.
+func nonCheckpointBlobs(blobs []blob.Blob) []blob.Blob {
+	var out []blob.Blob
+	for _, b := range blobs {
+		if b.Kind != blob.KindCheckpoint {
+			out = append(out, b)
+		}
+	}
+	return out
+}
+
 func TestHookCommit_InsertsCommitTask(t *testing.T) {
 	gitRoot, _, s := setupTestRepo(t)
 	sha := commitFile(t, gitRoot, "main.go", "package main\n", "feat: initial commit")
@@ -82,16 +94,40 @@ func TestHookCommit_InsertsCommitTask(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	// Tasks are extracted into a blob on commit; verify via blob log.
-	blobs, err := s.BlobLog(testCtx, 1)
+	// Each hookCommit produces a regular blob + a checkpoint blob.
+	all, err := s.BlobLog(testCtx, 10)
 	if err != nil {
 		t.Fatal(err)
 	}
+	blobs := nonCheckpointBlobs(all)
 	if len(blobs) != 1 {
-		t.Fatalf("expected 1 blob after hookCommit, got %d", len(blobs))
+		t.Fatalf("expected 1 non-checkpoint blob after hookCommit, got %d", len(blobs))
 	}
 	if !strings.HasPrefix(sha, blobs[0].CommitStart) && !strings.HasPrefix(blobs[0].CommitStart, sha[:7]) {
 		t.Errorf("blob CommitStart=%q, want prefix of %s", blobs[0].CommitStart, sha)
+	}
+
+	// Verify a checkpoint blob was also created.
+	checkpoints := all[:len(all)-len(blobs)]
+	_ = checkpoints // presence verified by total count
+	if len(all) != 2 {
+		t.Errorf("expected 2 total blobs (regular + checkpoint), got %d", len(all))
+	}
+}
+
+func TestHookCommit_SkipsLoreCheckpointCommits(t *testing.T) {
+	gitRoot, _, s := setupTestRepo(t)
+
+	// A "lore: checkpoint" commit must be a no-op.
+	commitFile(t, gitRoot, "x.go", "package x", "lore: checkpoint")
+
+	if err := hookCommit(testCtx, gitRoot, s); err != nil {
+		t.Fatal(err)
+	}
+
+	all, _ := s.BlobLog(testCtx, 10)
+	if len(all) != 0 {
+		t.Errorf("expected 0 blobs for lore: checkpoint commit, got %d", len(all))
 	}
 }
 
@@ -103,13 +139,13 @@ func TestHookCommit_InsertsFileWriteTasks(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	// Verify the extracted blob has auth.go in its file list.
-	blobs, err := s.BlobLog(testCtx, 1)
+	all, err := s.BlobLog(testCtx, 10)
 	if err != nil {
 		t.Fatal(err)
 	}
+	blobs := nonCheckpointBlobs(all)
 	if len(blobs) != 1 {
-		t.Fatalf("expected 1 blob, got %d", len(blobs))
+		t.Fatalf("expected 1 non-checkpoint blob, got %d", len(blobs))
 	}
 	files, err := s.BlobFiles(testCtx, blobs[0].ID)
 	if err != nil {
@@ -123,6 +159,39 @@ func TestHookCommit_InsertsFileWriteTasks(t *testing.T) {
 	}
 	if !found {
 		t.Errorf("expected blob_file auth.go (written), got: %v", files)
+	}
+}
+
+func TestHookCommit_FiltersLorePaths(t *testing.T) {
+	gitRoot, loreRoot, s := setupTestRepo(t)
+
+	// Commit a source file plus a .lore/ file. The .lore/ path must not appear
+	// in the extracted blob's file list.
+	commitFile(t, gitRoot, "main.go", "package main", "feat: add main")
+	// Stage a .lore/ file that is NOT lore.db (avoids corrupting the open store).
+	os.WriteFile(filepath.Join(loreRoot, "scratch.tmp"), []byte("test"), 0644)
+	run := func(args ...string) {
+		cmd := exec.Command("git", args...)
+		cmd.Dir = gitRoot
+		cmd.Run()
+	}
+	run("add", ".lore/scratch.tmp")
+	run("commit", "--amend", "--no-edit")
+
+	if err := hookCommit(testCtx, gitRoot, s); err != nil {
+		t.Fatal(err)
+	}
+
+	all, _ := s.BlobLog(testCtx, 10)
+	blobs := nonCheckpointBlobs(all)
+	if len(blobs) != 1 {
+		t.Fatalf("expected 1 non-checkpoint blob, got %d", len(blobs))
+	}
+	files, _ := s.BlobFiles(testCtx, blobs[0].ID)
+	for _, f := range files {
+		if strings.HasPrefix(f.Path, ".lore/") {
+			t.Errorf("blob_files must not contain .lore/ path, got: %s", f.Path)
+		}
 	}
 }
 
@@ -149,13 +218,14 @@ func TestHookCommit_InsertsFileDeleteTask(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	// The second blob should have old.go with role=deleted.
-	blobs, err := s.BlobLog(testCtx, 1)
+	// Find the most-recent non-checkpoint blob — it should have old.go deleted.
+	all, err := s.BlobLog(testCtx, 10)
 	if err != nil {
 		t.Fatal(err)
 	}
-	if len(blobs) != 1 {
-		t.Fatalf("expected 1 most-recent blob, got %d", len(blobs))
+	blobs := nonCheckpointBlobs(all)
+	if len(blobs) < 1 {
+		t.Fatal("expected at least 1 non-checkpoint blob")
 	}
 	files, err := s.BlobFiles(testCtx, blobs[0].ID)
 	if err != nil {
