@@ -1,0 +1,93 @@
+site_name: Lore
+site_description: Git stores what changed. Lore stores why it changed.
+site_url: https://nishchay.github.io/lore/
+repo_url: https://github.com/nishchay/lore
+repo_name: nishchay/lore
+edit_uri: edit/main/website/docs/
+
+theme:
+  name: material
+  favicon: assets/favicon.ico
+  palette:
+    - scheme: default
+      primary: indigo
+      accent: indigo
+      toggle:
+        icon: material/brightness-7
+        name: Switch to dark mode
+    - scheme: slate
+      primary: indigo
+      accent: indigo
+      toggle:
+        icon: material/brightness-4
+        name: Switch to light mode
+  features:
+    - navigation.tabs
+    - navigation.sections
+    - navigation.expand
+    - navigation.top
+    - navigation.instant
+    - search.suggest
+    - search.highlight
+    - content.code.copy
+    - content.code.annotate
+    - content.tabs.link
+
+markdown_extensions:
+  - admonition
+  - pymdownx.details
+  - pymdownx.superfences:
+      custom_fences:
+        - name: mermaid
+          class: mermaid
+          format: !!python/name:pymdownx.superfences.fence_code_format
+  - pymdownx.highlight:
+      anchor_linenums: true
+      line_spans: __span
+  - pymdownx.inlinehilite
+  - pymdownx.tabbed:
+      alternate_style: true
+  - pymdownx.emoji:
+      emoji_index: !!python/name:material.extensions.emoji.twemoji
+      emoji_generator: !!python/name:material.extensions.emoji.to_svg
+  - tables
+  - attr_list
+  - md_in_html
+  - toc:
+      permalink: true
+
+nav:
+  - Introduction: index.md
+  - Installation: installation.md
+  - Quick Start: quickstart.md
+
+  - Concepts:
+      - Tasks: concepts/tasks.md
+      - Blobs: concepts/blobs.md
+      - Nodes: concepts/nodes.md
+      - Knowledge Graph: concepts/graph.md
+
+  - Agent Integrations:
+      - Claude Code: agents/claude-code.md
+      - Cursor: agents/cursor.md
+      - OpenHands: agents/openhands.md
+      - Custom Agents: agents/custom-agent.md
+
+  - CLI Reference:
+      - lore init: cli/init.md
+      - lore log: cli/log.md
+      - lore show: cli/show.md
+      - lore why: cli/why.md
+      - lore trace: cli/trace.md
+      - lore graph: cli/graph.md
+      - lore status: cli/status.md
+      - lore record: cli/record.md
+      - lore doctor: cli/doctor.md
+      - lore node: cli/node.md
+      - lore assign: cli/assign.md
+      - glh: cli/glh.md
+
+  - Architecture:
+      - Storage Tiers: architecture/storage.md
+      - Schema: architecture/schema.md
+      - Trust Model: architecture/trust-model.md
