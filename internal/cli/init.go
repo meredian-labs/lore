@@ -13,6 +13,14 @@ import (
 	"github.com/spf13/cobra"
 )
 
+func loreExecutable() string {
+	exe, err := os.Executable()
+	if err != nil {
+		return "lore"
+	}
+	return exe
+}
+
 var initCmd = &cobra.Command{
 	Use:   "init",
 	Short: "Initialize lore repository and install git hooks",
@@ -56,8 +64,8 @@ func runInit(cmd *cobra.Command, args []string) error {
 		return fmt.Errorf("writing config: %w", err)
 	}
 
-	// Step 7: install git hooks.
-	if err := git.InstallHooks(gitRoot, loreRoot); err != nil {
+	// Step 7: install git hooks using the absolute path to the running binary.
+	if err := git.InstallHooks(gitRoot, loreExecutable()); err != nil {
 		return fmt.Errorf("installing hooks: %w", err)
 	}
 

@@ -292,6 +292,14 @@ func (s *Store) UnassignedBlobCount(ctx context.Context) (int, error) {
 	return n, err
 }
 
+func (s *Store) BlobFileCount(ctx context.Context, blobID string) (int, error) {
+	var n int
+	err := s.db.QueryRowContext(ctx,
+		`SELECT COUNT(*) FROM blob_files WHERE blob_id = ?`, blobID,
+	).Scan(&n)
+	return n, err
+}
+
 func (s *Store) LastExtractionTime(ctx context.Context) (int64, error) {
 	var ts sql.NullInt64
 	err := s.db.QueryRowContext(ctx, `SELECT MAX(created_at) FROM blobs`).Scan(&ts)

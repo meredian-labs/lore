@@ -1,16 +1,11 @@
 package store
 
-type BlobFile struct {
-	BlobID string
-	Path   string
-	Role   string // "written" | "deleted" | "renamed_from" | "renamed_to"
-}
+import "github.com/nishchay/lore/internal/blob"
 
-type BlobCommand struct {
-	BlobID  string
-	Command string
-	TS      int64
-}
+// BlobFile and BlobCommand are defined in internal/blob to avoid circular
+// imports. These aliases let existing store code use the unqualified names.
+type BlobFile = blob.BlobFile
+type BlobCommand = blob.BlobCommand
 
 type GraphNode struct {
 	ID    string

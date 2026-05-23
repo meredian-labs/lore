@@ -19,6 +19,11 @@ var rootCmd = &cobra.Command{
 		if name == "init" || name == "doctor" || name == "version" {
 			return nil
 		}
+		// Hook sub-commands run from inside git hooks; they handle their own
+		// lore root lookup and fail silently so git operations are never blocked.
+		if cmd.Parent() != nil && cmd.Parent().Name() == "hook" {
+			return nil
+		}
 		_, err := findLoreRoot()
 		return err
 	},
@@ -30,7 +35,7 @@ func Execute() error {
 
 func init() {
 	rootCmd.PersistentFlags().Bool("no-color", false, "Disable color output")
-	rootCmd.AddCommand(initCmd, statusCmd, hookCmd)
+	rootCmd.AddCommand(initCmd, statusCmd, recordCmd, hookCmd, logCmd, showCmd)
 	hookCmd.Hidden = true
 }
 
