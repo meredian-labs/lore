@@ -348,6 +348,25 @@ func scanBlobs(rows *sql.Rows) ([]blob.Blob, error) {
 	return blobs, rows.Err()
 }
 
+// BlobByCommitStart returns the non-checkpoint blob whose commit_start matches sha,
+// or nil if none exists.
+func (s *Store) BlobByCommitStart(ctx context.Context, sha string) (*blob.Blob, error) {
+	row := s.db.QueryRowContext(ctx,
+		`SELECT id, kind, title, summary, recap, user_intent, inferred_reasoning,
+		        tags, trust_level, ai_source, started_at, ended_at,
+		        commit_start, commit_end, COALESCE(primary_node_id, ''), created_at
+		 FROM blobs WHERE commit_start = ? AND kind != 'Checkpoint' LIMIT 1`, sha,
+	)
+	b, err := scanBlob(row)
+	if errors.Is(err, sql.ErrNoRows) {
+		return nil, nil
+	}
+	if err != nil {
+		return nil, err
+	}
+	return &b, nil
+}
+
 func nullableString(s string) any {
 	if s == "" {
 		return nil

@@ -411,3 +411,41 @@ func TestInsertBlobWithRelations_AtomicRollback(t *testing.T) {
 		t.Errorf("blob_files should be empty after rollback, got %d entries", len(blobFiles))
 	}
 }
+
+func TestBlobByCommitStart(t *testing.T) {
+	s := openMemory(t)
+
+	sha := "abc1234567890"
+	b := makeBlob(uuid.NewString(), blob.KindFeature)
+	b.CommitStart = sha
+	if err := s.InsertBlobWithRelations(ctx, b, nil, nil, nil); err != nil {
+		t.Fatal(err)
+	}
+
+	// Insert a checkpoint with the same SHA — should not be returned.
+	cp := makeBlob(uuid.NewString(), blob.KindCheckpoint)
+	cp.CommitStart = sha
+	if err := s.InsertBlobWithRelations(ctx, cp, nil, nil, nil); err != nil {
+		t.Fatal(err)
+	}
+
+	got, err := s.BlobByCommitStart(ctx, sha)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if got == nil {
+		t.Fatal("expected blob, got nil")
+	}
+	if got.ID != b.ID {
+		t.Errorf("got blob %s, want %s", got.ID, b.ID)
+	}
+
+	// Unknown SHA returns nil.
+	got, err = s.BlobByCommitStart(ctx, "unknown")
+	if err != nil {
+		t.Fatal(err)
+	}
+	if got != nil {
+		t.Errorf("expected nil for unknown SHA, got %+v", got)
+	}
+}
