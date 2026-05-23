@@ -1,4 +1,4 @@
-package main
+package glh
 
 import (
 	"context"
@@ -13,12 +13,8 @@ import (
 )
 
 func runStatus(args []string) int {
-	// Run git status first (inherits stdout/stderr).
 	code := gitExitCode(append([]string{"status"}, args...))
-
-	// Append lore context regardless of git exit code (e.g. "nothing to commit" is exit 0).
 	printLoreStatusFooter()
-
 	return code
 }
 

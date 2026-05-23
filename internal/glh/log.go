@@ -1,4 +1,4 @@
-package main
+package glh
 
 import (
 	"context"
@@ -22,7 +22,6 @@ type gitCommit struct {
 func runLog(args []string) int {
 	commits, err := gitLog(args)
 	if err != nil {
-		// git failed — fall back to plain passthrough.
 		return gitExitCode(append([]string{"log"}, args...))
 	}
 
@@ -65,10 +64,7 @@ func runLog(args []string) int {
 	return 0
 }
 
-// gitLog runs git log with a machine-readable format and returns parsed commits.
-// User-supplied args are appended so flags like --oneline or -n work as expected.
 func gitLog(args []string) ([]gitCommit, error) {
-	// If the user passed --format or --pretty, respect it by falling back to passthrough.
 	for _, a := range args {
 		if strings.HasPrefix(a, "--format") || strings.HasPrefix(a, "--pretty") {
 			return nil, fmt.Errorf("custom format")
@@ -76,10 +72,9 @@ func gitLog(args []string) ([]gitCommit, error) {
 	}
 
 	glhArgs := []string{"log", "--format=%H|%s|%ad", "--date=short"}
-	// Only set a default limit if the user hasn't passed -n / --max-count.
 	hasLimit := false
 	for _, a := range args {
-		if a == "-n" || strings.HasPrefix(a, "--max-count") || strings.HasPrefix(a, "-n") {
+		if a == "-n" || strings.HasPrefix(a, "--max-count") {
 			hasLimit = true
 			break
 		}

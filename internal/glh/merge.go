@@ -1,4 +1,4 @@
-package main
+package glh
 
 func runMerge(args []string) int {
 	code := gitExitCode(append([]string{"merge"}, args...))

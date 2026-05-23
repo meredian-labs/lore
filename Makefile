@@ -1,15 +1,12 @@
 BINARY   = lore
 VERSION ?= dev
 LDFLAGS  = -ldflags "-X github.com/nishchay/lore/internal/cli.Version=$(VERSION)"
+INSTALL_DIR ?= /usr/local/bin
 
-.PHONY: build build-all test lint install install-all clean release snapshot
+.PHONY: build test lint install install-glh clean release snapshot
 
 build:
 	go build $(LDFLAGS) -o $(BINARY) ./cmd/lore
-
-build-all:
-	go build $(LDFLAGS) -o lore ./cmd/lore
-	go build $(LDFLAGS) -o glh  ./cmd/glh
 
 test:
 	go test ./...
@@ -20,9 +17,9 @@ lint:
 install:
 	go install $(LDFLAGS) ./cmd/lore
 
-install-all:
-	go install $(LDFLAGS) ./cmd/lore
-	go install $(LDFLAGS) ./cmd/glh
+# Symlink glh -> lore so the same binary handles both CLIs.
+install-glh: install
+	ln -sf $(shell go env GOPATH)/bin/lore $(INSTALL_DIR)/glh
 
 clean:
 	rm -f lore glh

@@ -1,4 +1,4 @@
-package main
+package glh
 
 import (
 	"encoding/json"
@@ -9,7 +9,6 @@ import (
 )
 
 func runCommit(args []string) int {
-	// Strip --recap from args before passing to git.
 	recap := false
 	filtered := args[:0]
 	for _, a := range args {
@@ -36,8 +35,6 @@ func runCommit(args []string) int {
 	return 0
 }
 
-// runRecap prompts the user for a one-line intent and submits it as an
-// AgentRecap task via "lore hook agent-recap human:glh".
 func runRecap() {
 	fmt.Fprint(os.Stderr, "Intent (one line, Enter to skip): ")
 	var line string

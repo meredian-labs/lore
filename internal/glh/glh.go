@@ -1,4 +1,7 @@
-package main
+// Package glh implements the git lore handler — a git wrapper that fires
+// lore task capture on commit/checkout/merge and provides enriched log
+// and status views.
+package glh
 
 import (
 	"context"
@@ -8,8 +11,29 @@ import (
 	"strings"
 )
 
-// hooksInstalled reports whether core.hooksPath is set to .lore/hooks,
-// meaning git will already fire lore hooks on commit/checkout/merge.
+// Run is the entry point when the binary is invoked as "glh".
+func Run() {
+	if len(os.Args) < 2 {
+		passthrough([]string{"--help"})
+		return
+	}
+	switch os.Args[1] {
+	case "commit":
+		os.Exit(runCommit(os.Args[2:]))
+	case "checkout", "switch":
+		os.Exit(runCheckout(os.Args[2:]))
+	case "merge":
+		os.Exit(runMerge(os.Args[2:]))
+	case "log":
+		os.Exit(runLog(os.Args[2:]))
+	case "status", "st":
+		os.Exit(runStatus(os.Args[2:]))
+	default:
+		passthrough(os.Args[1:])
+	}
+}
+
+// hooksInstalled reports whether core.hooksPath is set to .lore/hooks.
 func hooksInstalled() bool {
 	out, err := exec.Command("git", "config", "core.hooksPath").Output()
 	if err != nil {
@@ -37,11 +61,10 @@ func findLoreRoot() (string, error) {
 	}
 }
 
-// fireLoreHook runs "lore hook <args>" silently — never blocks the caller on failure.
+// fireLoreHook runs "lore hook <args>" silently — never blocks the caller.
 func fireLoreHook(args ...string) {
 	full := append([]string{"hook"}, args...)
-	cmd := exec.CommandContext(context.Background(), "lore", full...)
-	cmd.Run()
+	exec.CommandContext(context.Background(), "lore", full...).Run()
 }
 
 // gitExitCode runs git with the given args, inheriting stdin/stdout/stderr,

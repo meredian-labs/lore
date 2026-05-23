@@ -1,4 +1,4 @@
-package main
+package glh
 
 import (
 	"os/exec"
@@ -6,7 +6,6 @@ import (
 )
 
 func runCheckout(args []string) int {
-	// Capture the current branch before switching.
 	prevBranch := currentBranch()
 
 	code := gitExitCode(append([]string{"checkout"}, args...))
@@ -17,7 +16,6 @@ func runCheckout(args []string) int {
 	if !hooksInstalled() {
 		newBranch := currentBranch()
 		if newBranch != "" && newBranch != prevBranch {
-			// flag=1 means this is a branch switch, not a file checkout.
 			fireLoreHook("checkout", prevBranch, newBranch, "1")
 		}
 	}

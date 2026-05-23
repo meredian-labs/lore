@@ -4,11 +4,19 @@ import (
 	"errors"
 	"fmt"
 	"os"
+	"path/filepath"
 
 	"github.com/nishchay/lore/internal/cli"
+	"github.com/nishchay/lore/internal/glh"
 )
 
 func main() {
+	// When invoked as "glh" (via symlink or rename), run the git lore handler.
+	if filepath.Base(os.Args[0]) == "glh" {
+		glh.Run()
+		return
+	}
+
 	if err := cli.Execute(); err != nil {
 		switch {
 		case errors.Is(err, cli.ErrNotALoreRepo):
