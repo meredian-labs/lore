@@ -35,7 +35,7 @@ func Execute() error {
 
 func init() {
 	rootCmd.PersistentFlags().Bool("no-color", false, "Disable color output")
-	rootCmd.AddCommand(initCmd, statusCmd, recordCmd, hookCmd, logCmd, showCmd, nodeCmd, assignCmd, whyCmd, traceCmd, graphCmd)
+	rootCmd.AddCommand(initCmd, statusCmd, recordCmd, hookCmd, logCmd, showCmd, nodeCmd, assignCmd, whyCmd, traceCmd, graphCmd, mcpCmd)
 	hookCmd.Hidden = true
 }
 

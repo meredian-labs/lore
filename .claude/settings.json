@@ -12,6 +12,10 @@
       {
         "matcher": "Bash",
         "command": "lore hook command \"$TOOL_INPUT_command\" agent:claude"
+      },
+      {
+        "matcher": "Read",
+        "command": "lore hook file-read \"$TOOL_INPUT_file_path\" agent:claude"
       }
     ],
     "Stop": [
@@ -19,5 +23,14 @@
         "command": "lore hook agent-recap agent:claude"
       }
     ]
+  },
+  "mcpServers": {
+    "lore": {
+      "args": [
+        "mcp",
+        "agent:claude"
+      ],
+      "command": "lore"
+    }
   }
 }

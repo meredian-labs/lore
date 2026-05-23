@@ -15,6 +15,7 @@ type Window struct {
 	CommitEnd    string // SHA of latest CommitCreated
 	FilesWritten []string
 	FilesDeleted []string
+	FilesRead    []string // files read by an agent during this window
 	Commands     []string
 	CommitMsgs   []string
 	Sources      []string
@@ -29,6 +30,7 @@ func BuildWindow(tasks []task.Task) Window {
 
 	writtenSet := make(map[string]struct{})
 	deletedSet := make(map[string]struct{})
+	readSet := make(map[string]struct{})
 	commandSet := make(map[string]struct{})
 	sourceSet := make(map[string]struct{})
 
@@ -63,6 +65,10 @@ func BuildWindow(tasks []task.Task) Window {
 			if t.Path != "" {
 				deletedSet[t.Path] = struct{}{}
 			}
+		case task.KindFileRead:
+			if t.Path != "" {
+				readSet[t.Path] = struct{}{}
+			}
 		case task.KindCommand:
 			if t.Detail != "" {
 				commandSet[t.Detail] = struct{}{}
@@ -80,6 +86,9 @@ func BuildWindow(tasks []task.Task) Window {
 	}
 	for p := range deletedSet {
 		w.FilesDeleted = append(w.FilesDeleted, p)
+	}
+	for p := range readSet {
+		w.FilesRead = append(w.FilesRead, p)
 	}
 	for c := range commandSet {
 		w.Commands = append(w.Commands, c)

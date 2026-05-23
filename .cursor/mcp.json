@@ -1,0 +1,11 @@
+{
+  "mcpServers": {
+    "lore": {
+      "command": "lore",
+      "args": [
+        "mcp",
+        "agent:cursor"
+      ]
+    }
+  }
+}

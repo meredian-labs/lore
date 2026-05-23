@@ -54,6 +54,13 @@ var hookFileWriteCmd = &cobra.Command{
 	RunE:  runHookFileWrite,
 }
 
+var hookFileReadCmd = &cobra.Command{
+	Use:   "file-read <path> <source>",
+	Short: "Record a FileRead task from an agent tool use",
+	Args:  cobra.ExactArgs(2),
+	RunE:  runHookFileRead,
+}
+
 var hookCommandCmd = &cobra.Command{
 	Use:   "command <cmd> <source>",
 	Short: "Record a Command task from an agent tool use",
@@ -70,7 +77,7 @@ var hookAgentRecapCmd = &cobra.Command{
 
 func init() {
 	hookCmd.AddCommand(hookCommitCmd, hookCheckoutCmd, hookMergeCmd,
-		hookFileWriteCmd, hookCommandCmd, hookAgentRecapCmd)
+		hookFileWriteCmd, hookFileReadCmd, hookCommandCmd, hookAgentRecapCmd)
 }
 
 // --- cobra wrappers ---
@@ -128,6 +135,19 @@ func runHookFileWrite(cmd *cobra.Command, args []string) error {
 	}
 	defer s.Close()
 	return hookFileWrite(cmd.Context(), args[0], args[1], s)
+}
+
+func runHookFileRead(cmd *cobra.Command, args []string) error {
+	loreRoot, err := findLoreRoot()
+	if err != nil {
+		return nil
+	}
+	s, err := store.Open(filepath.Join(loreRoot, "lore.db"))
+	if err != nil {
+		return nil
+	}
+	defer s.Close()
+	return hookFileRead(cmd.Context(), args[0], args[1], s)
 }
 
 func runHookCommand(cmd *cobra.Command, args []string) error {
@@ -294,6 +314,21 @@ func hookFileWrite(ctx context.Context, path, source string, s *store.Store) err
 	t := task.Task{
 		ID:         uuid.NewString(),
 		Kind:       task.KindFileWrite,
+		Path:       path,
+		Source:     source,
+		TrustLevel: 2,
+		TS:         time.Now().UnixNano(),
+	}
+	return s.InsertTask(ctx, t)
+}
+
+func hookFileRead(ctx context.Context, path, source string, s *store.Store) error {
+	if strings.HasPrefix(path, ".lore/") {
+		return nil
+	}
+	t := task.Task{
+		ID:         uuid.NewString(),
+		Kind:       task.KindFileRead,
 		Path:       path,
 		Source:     source,
 		TrustLevel: 2,

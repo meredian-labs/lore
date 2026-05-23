@@ -107,12 +107,15 @@ func blobFromLLM(r LLMResponse, w Window) Blob {
 }
 
 func buildBlobFiles(blobID string, w Window) []BlobFile {
-	files := make([]BlobFile, 0, len(w.FilesWritten)+len(w.FilesDeleted))
+	files := make([]BlobFile, 0, len(w.FilesWritten)+len(w.FilesDeleted)+len(w.FilesRead))
 	for _, p := range w.FilesWritten {
 		files = append(files, BlobFile{BlobID: blobID, Path: p, Role: "written"})
 	}
 	for _, p := range w.FilesDeleted {
 		files = append(files, BlobFile{BlobID: blobID, Path: p, Role: "deleted"})
+	}
+	for _, p := range w.FilesRead {
+		files = append(files, BlobFile{BlobID: blobID, Path: p, Role: "read"})
 	}
 	return files
 }

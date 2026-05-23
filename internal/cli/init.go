@@ -102,10 +102,12 @@ type claudeHook struct {
 }
 
 // loreHooks are the hook entries lore installs into .claude/settings.json.
+// Includes file writes, reads, commands, and the Stop recap.
 var loreHooks = map[string][]claudeHook{
 	"PostToolUse": {
 		{Matcher: "Edit", Command: `lore hook file-write "$TOOL_INPUT_file_path" agent:claude`},
 		{Matcher: "Write", Command: `lore hook file-write "$TOOL_INPUT_file_path" agent:claude`},
+		{Matcher: "Read", Command: `lore hook file-read "$TOOL_INPUT_file_path" agent:claude`},
 		{Matcher: "Bash", Command: `lore hook command "$TOOL_INPUT_command" agent:claude`},
 	},
 	"Stop": {
@@ -113,9 +115,30 @@ var loreHooks = map[string][]claudeHook{
 	},
 }
 
-// writeClaudeSettings writes (or merges) lore's hooks into .claude/settings.json.
-// Unknown top-level keys in an existing file are preserved.
+// loreMCPServer is the mcpServers entry added to .claude/settings.json.
+var loreMCPServer = map[string]interface{}{
+	"command": "lore",
+	"args":    []string{"mcp", "agent:claude"},
+}
+
+// writeClaudeSettings writes (or merges) lore's hooks and MCP server config into
+// .claude/settings.json, then writes MCP configs for Cursor and Windsurf.
+// Unknown top-level keys in existing files are preserved.
 func writeClaudeSettings(gitRoot string) error {
+	if err := writeClaudeCodeSettings(gitRoot); err != nil {
+		return err
+	}
+	if err := writeCursorMCP(gitRoot); err != nil {
+		return err
+	}
+	if err := writeWindsurfMCP(gitRoot); err != nil {
+		return err
+	}
+	return nil
+}
+
+// writeClaudeCodeSettings merges lore hooks and MCP server into .claude/settings.json.
+func writeClaudeCodeSettings(gitRoot string) error {
 	claudeDir := filepath.Join(gitRoot, ".claude")
 	if err := os.MkdirAll(claudeDir, 0755); err != nil {
 		return err
@@ -128,13 +151,11 @@ func writeClaudeSettings(gitRoot string) error {
 		json.Unmarshal(data, &rawMap)
 	}
 
-	// Parse existing hooks section (best-effort).
+	// Merge hooks.
 	existingHooks := map[string][]claudeHook{}
 	if hookRaw, ok := rawMap["hooks"]; ok {
 		json.Unmarshal(hookRaw, &existingHooks)
 	}
-
-	// Merge: add lore entries that aren't already present.
 	for event, hooks := range loreHooks {
 		cur := existingHooks[event]
 		for _, h := range hooks {
@@ -144,18 +165,88 @@ func writeClaudeSettings(gitRoot string) error {
 		}
 		existingHooks[event] = cur
 	}
-
 	hookBytes, err := json.Marshal(existingHooks)
 	if err != nil {
 		return err
 	}
 	rawMap["hooks"] = json.RawMessage(hookBytes)
 
+	// Merge mcpServers — add "lore" entry if not present.
+	mcpServers := map[string]json.RawMessage{}
+	if mcpRaw, ok := rawMap["mcpServers"]; ok {
+		json.Unmarshal(mcpRaw, &mcpServers)
+	}
+	if _, exists := mcpServers["lore"]; !exists {
+		serverBytes, _ := json.Marshal(loreMCPServer)
+		mcpServers["lore"] = json.RawMessage(serverBytes)
+	}
+	mcpBytes, err := json.Marshal(mcpServers)
+	if err != nil {
+		return err
+	}
+	rawMap["mcpServers"] = json.RawMessage(mcpBytes)
+
 	out, err := json.MarshalIndent(rawMap, "", "  ")
 	if err != nil {
 		return err
 	}
 	return os.WriteFile(settingsPath, append(out, '\n'), 0644)
+}
+
+// mcpConfig is the common MCP server config written for non-Claude agents.
+type mcpConfig struct {
+	MCPServers map[string]mcpServerEntry `json:"mcpServers"`
+}
+
+type mcpServerEntry struct {
+	Command string   `json:"command"`
+	Args    []string `json:"args"`
+}
+
+// writeCursorMCP writes .cursor/mcp.json for Cursor IDE.
+func writeCursorMCP(gitRoot string) error {
+	return writeMCPConfig(filepath.Join(gitRoot, ".cursor", "mcp.json"), "agent:cursor")
+}
+
+// writeWindsurfMCP writes .windsurf/mcp.json for Windsurf IDE.
+func writeWindsurfMCP(gitRoot string) error {
+	return writeMCPConfig(filepath.Join(gitRoot, ".windsurf", "mcp.json"), "agent:windsurf")
+}
+
+// writeMCPConfig writes (or merges) the lore MCP server entry into a standard
+// mcpServers JSON file at path. The format is compatible with Cursor and Windsurf.
+func writeMCPConfig(path, source string) error {
+	if err := os.MkdirAll(filepath.Dir(path), 0755); err != nil {
+		return err
+	}
+
+	// Load existing file as a raw map to preserve other servers.
+	rawMap := map[string]json.RawMessage{}
+	if data, err := os.ReadFile(path); err == nil {
+		json.Unmarshal(data, &rawMap)
+	}
+
+	// Parse existing mcpServers (best-effort).
+	servers := map[string]json.RawMessage{}
+	if raw, ok := rawMap["mcpServers"]; ok {
+		json.Unmarshal(raw, &servers)
+	}
+
+	// Add lore entry if absent.
+	if _, exists := servers["lore"]; !exists {
+		entry := mcpServerEntry{Command: "lore", Args: []string{"mcp", source}}
+		b, _ := json.Marshal(entry)
+		servers["lore"] = json.RawMessage(b)
+	}
+
+	serversBytes, _ := json.Marshal(servers)
+	rawMap["mcpServers"] = json.RawMessage(serversBytes)
+
+	out, err := json.MarshalIndent(rawMap, "", "  ")
+	if err != nil {
+		return err
+	}
+	return os.WriteFile(path, append(out, '\n'), 0644)
 }
 
 // hookEntryExists reports whether an identical (matcher, command) entry already exists.

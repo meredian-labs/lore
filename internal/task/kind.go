@@ -6,6 +6,7 @@ const (
 	KindFileWrite     TaskKind = "FileWrite"
 	KindFileDelete    TaskKind = "FileDelete"
 	KindFileRename    TaskKind = "FileRename"
+	KindFileRead      TaskKind = "FileRead"
 	KindCommand       TaskKind = "Command"
 	KindCommitCreated TaskKind = "CommitCreated"
 	KindBranchSwitch  TaskKind = "BranchSwitch"
