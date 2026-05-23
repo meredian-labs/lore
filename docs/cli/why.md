@@ -1,7 +1,9 @@
 ---
-sidebar_position: 4
+layout: default
+title: lore why
+parent: CLI Reference
+nav_order: 4
 ---
-
 # lore why
 
 Show all blobs that have modified a file, newest first.

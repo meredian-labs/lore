@@ -1,7 +1,9 @@
 ---
-sidebar_position: 2
+layout: default
+title: Schema
+parent: Architecture
+nav_order: 2
 ---
-
 # Database Schema
 
 Lore stores all data in a single SQLite file at `.lore/lore.db`. The schema is divided across the four storage tiers.

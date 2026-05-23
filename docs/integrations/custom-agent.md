@@ -1,7 +1,9 @@
 ---
-sidebar_position: 4
+layout: default
+title: Custom Agents
+parent: Agent Integrations
+nav_order: 4
 ---
-
 # Custom Agent Integration
 
 Any AI agent or automated tool can integrate with Lore. There are two integration paths: MCP (recommended for agents with MCP support) and direct hook calls (for agents or scripts that just run shell commands).

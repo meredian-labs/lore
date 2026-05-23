@@ -1,7 +1,9 @@
 ---
-sidebar_position: 7
+layout: default
+title: glh
+parent: CLI Reference
+nav_order: 12
 ---
-
 # glh
 
 Git with Lore hooks — a drop-in git wrapper for daily use.

@@ -1,7 +1,9 @@
 ---
-sidebar_position: 2
+layout: default
+title: lore log
+parent: CLI Reference
+nav_order: 2
 ---
-
 # lore log / glh log
 
 List blobs and annotated git history.

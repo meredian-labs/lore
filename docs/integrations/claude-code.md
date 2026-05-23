@@ -1,7 +1,9 @@
 ---
-sidebar_position: 1
+layout: default
+title: Claude Code
+parent: Agent Integrations
+nav_order: 1
 ---
-
 # Claude Code Integration
 
 Lore integrates with Claude Code at three levels: Git hooks that capture every file edit and command, a `Stop` hook that submits a structured session recap at the end of each agent turn, and an MCP server that lets the agent query Lore directly during a session.

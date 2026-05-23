@@ -1,7 +1,9 @@
 ---
-sidebar_position: 3
+layout: default
+title: OpenHands
+parent: Agent Integrations
+nav_order: 3
 ---
-
 # OpenHands Integration
 
 Lore integrates with OpenHands via the MCP protocol. The Lore MCP server exposes tools for recording file activity, commands, and session recaps. An OpenHands agent configured with the Lore MCP server can capture engineering knowledge as it works, producing AgentTruth-level blobs in the Lore knowledge graph.

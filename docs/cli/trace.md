@@ -1,7 +1,9 @@
 ---
-sidebar_position: 5
+layout: default
+title: lore trace
+parent: CLI Reference
+nav_order: 5
 ---
-
 # lore trace
 
 Show the chronological history of a file across blobs.

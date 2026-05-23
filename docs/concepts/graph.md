@@ -1,10 +1,9 @@
 ---
-id: graph
+layout: default
 title: Knowledge Graph
-sidebar_label: Knowledge Graph
-sidebar_position: 4
+parent: Concepts
+nav_order: 4
 ---
-
 # Knowledge Graph
 
 The knowledge graph is a navigational index derived entirely from Blobs and Nodes. It represents the relationships between subsystems, work units, files, commits, and concepts — and it is always rebuilt from that source data, never manually authored.

@@ -1,10 +1,9 @@
 ---
-id: tasks
+layout: default
 title: Tasks
-sidebar_label: Tasks
-sidebar_position: 1
+parent: Concepts
+nav_order: 1
 ---
-
 # Tasks
 
 Tasks are the raw signal of Lore. They are atomic, observable development actions — deterministic facts about what happened — collected automatically as you work.

@@ -1,10 +1,9 @@
 ---
-id: nodes
+layout: default
 title: Nodes
-sidebar_label: Nodes
-sidebar_position: 3
+parent: Concepts
+nav_order: 3
 ---
-
 # Nodes
 
 A Node is a long-lived, named subsystem of your codebase. It groups related Blobs over time into a coherent topic — an area of the system that has identity, history, and evolution.

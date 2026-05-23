@@ -1,10 +1,9 @@
 ---
-id: assign
+layout: default
 title: lore assign
-sidebar_label: assign
-sidebar_position: 11
+parent: CLI Reference
+nav_order: 11
 ---
-
 # lore assign
 
 Assign a blob to a subsystem node.

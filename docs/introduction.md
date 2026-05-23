@@ -1,11 +1,8 @@
 ---
-id: introduction
+layout: default
 title: Introduction
-sidebar_label: Introduction
-sidebar_position: 1
-slug: /
+nav_order: 2
 ---
-
 # Lore
 
 **Git stores what changed. Lore stores why it changed.**

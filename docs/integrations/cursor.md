@@ -1,7 +1,9 @@
 ---
-sidebar_position: 2
+layout: default
+title: Cursor
+parent: Agent Integrations
+nav_order: 2
 ---
-
 # Cursor Integration
 
 Lore integrates with Cursor via its MCP (Model Context Protocol) support. After `lore init`, the Lore MCP server is registered in your repository's `.cursor/mcp.json` file. Once enabled in Cursor's settings, the agent can query Lore's knowledge graph and record activity during a session.

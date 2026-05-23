@@ -1,10 +1,9 @@
 ---
-id: doctor
+layout: default
 title: lore doctor
-sidebar_label: doctor
-sidebar_position: 9
+parent: CLI Reference
+nav_order: 9
 ---
-
 # lore doctor
 
 Check your lore installation and diagnose configuration issues.

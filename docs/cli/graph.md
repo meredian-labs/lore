@@ -1,7 +1,9 @@
 ---
-sidebar_position: 6
+layout: default
+title: lore graph
+parent: CLI Reference
+nav_order: 6
 ---
-
 # lore graph
 
 Show the ASCII knowledge graph.

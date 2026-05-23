@@ -1,10 +1,9 @@
 ---
-id: blobs
+layout: default
 title: Blobs
-sidebar_label: Blobs
-sidebar_position: 2
+parent: Concepts
+nav_order: 2
 ---
-
 # Blobs
 
 A Blob is the primary artifact of Lore. It is a compressed, human-readable record of one unit of engineering work — a feature implementation, a bug fix, a refactor, an investigation — along with everything Lore observed while that work was happening.

@@ -1,10 +1,8 @@
 ---
-id: quickstart
-title: Quickstart
-sidebar_label: Quickstart
-sidebar_position: 3
+layout: default
+title: Quick Start
+nav_order: 4
 ---
-
 # Quickstart
 
 This guide walks you from a fresh Git repository to your first Blob in about five minutes.

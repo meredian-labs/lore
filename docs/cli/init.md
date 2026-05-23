@@ -1,7 +1,9 @@
 ---
-sidebar_position: 1
+layout: default
+title: lore init
+parent: CLI Reference
+nav_order: 1
 ---
-
 # lore init
 
 Initialize a repository for Lore and install all hooks.

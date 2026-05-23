@@ -1,7 +1,9 @@
 ---
-sidebar_position: 3
+layout: default
+title: lore show
+parent: CLI Reference
+nav_order: 3
 ---
-
 # lore show
 
 Show full detail for a single blob.

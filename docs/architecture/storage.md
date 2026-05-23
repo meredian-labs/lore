@@ -1,7 +1,9 @@
 ---
-sidebar_position: 1
+layout: default
+title: Storage Tiers
+parent: Architecture
+nav_order: 1
 ---
-
 # Storage Architecture
 
 Lore stores engineering knowledge in four tiers. Understanding the tiers is essential for understanding how Lore works.

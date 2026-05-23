@@ -1,10 +1,8 @@
 ---
-id: installation
+layout: default
 title: Installation
-sidebar_label: Installation
-sidebar_position: 2
+nav_order: 3
 ---
-
 # Installation
 
 ## Prerequisites

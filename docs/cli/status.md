@@ -1,10 +1,9 @@
 ---
-id: status
+layout: default
 title: lore status
-sidebar_label: status
-sidebar_position: 7
+parent: CLI Reference
+nav_order: 7
 ---
-
 # lore status
 
 Show the current lore state of the repository.

@@ -1,10 +1,9 @@
 ---
-id: record
+layout: default
 title: lore record
-sidebar_label: record
-sidebar_position: 8
+parent: CLI Reference
+nav_order: 8
 ---
-
 # lore record
 
 Emit a `Note` task that will be included in the next blob extraction.

@@ -1,7 +1,9 @@
 ---
-sidebar_position: 3
+layout: default
+title: Trust Model
+parent: Architecture
+nav_order: 3
 ---
-
 # Trust Model
 
 Lore tracks the confidence and provenance of all interpreted information. Every blob carries a trust level that tells you how much to rely on its interpreted fields.

@@ -1,10 +1,9 @@
 ---
-id: node
+layout: default
 title: lore node
-sidebar_label: node
-sidebar_position: 10
+parent: CLI Reference
+nav_order: 10
 ---
-
 # lore node
 
 Manage subsystem nodes — long-lived engineering topics that group related blobs.
